@@ -28,7 +28,8 @@ foo = pd.read_csv(files.open('ACCIDENT_LOCATION.csv'), usecols=['ACCIDENT_NO', '
 df = df.merge(foo, left_on='ACCIDENT_NO',right_on='ACCIDENT_NO', how='left')
 
 foo = pd.read_csv(files.open('VEHICLE.csv'), usecols=['ACCIDENT_NO', 'VEHICLE_YEAR_MANUF'])
-foo = foo[foo['VEHICLE_YEAR_MANUF'] < 1900]
+foo = foo[foo['VEHICLE_YEAR_MANUF'] > 1900]
+# We keep the oldest car involved in the accident
 foo = foo.groupby('ACCIDENT_NO').min().reset_index()
 df = df.merge(foo[['ACCIDENT_NO', 'VEHICLE_YEAR_MANUF']], left_on='ACCIDENT_NO',right_on='ACCIDENT_NO', how='left')
 
