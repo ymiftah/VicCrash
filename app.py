@@ -5,7 +5,7 @@ from dash import Dash, dcc, html, Input, Output
 import plotly.express as px
 import pandas as pd
 
-from utils import df, top_roads
+from utils import *
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -112,7 +112,8 @@ app.layout = html.Div(children=[
 
     dcc.Graph(
         id='accident-type',
-    ),
+        figure=fig_accident_type()
+    )
 ])
 
 @app.callback(
@@ -126,10 +127,7 @@ def update_graph_year(colors):
     fig.update_yaxes(title='Number of crashes')
     fig.update_layout(margin={'l': 40, 'b': 40, 't': 10, 'r': 0}, hovermode='closest')
     return fig
-
-order = df[['Accident Type Desc', 'crashes']].groupby('Accident Type Desc').sum().sort_values('crashes', ascending=False).index
-order_dca = df[['DCA Description', 'crashes']].groupby('DCA Description').sum().sort_values('crashes', ascending=False).index
-        
+  
 @app.callback(
     Output('hourly_accidents', 'figure'),
     Input('hour-colors', 'value'))
@@ -166,19 +164,6 @@ def update_roads(color, slider, value):
              color=color, barmode='stack',
              category_orders={'ROAD_NAME':top_roads , 'DCA Description':order_dca})
     fig.update_yaxes(title='Fatal accidents')
-    return fig
-
-@app.callback(
-    Output('accident-type', 'figure'))
-def update_accident_type(_):
-    severe = df[(df.SEVERITY <= 2)]
-    aa = severe[['ACCIDENTYEAR', 'DCA Description', 'crashes']].groupby(['ACCIDENTYEAR', 'DCA Description']).sum().reset_index()
-    top10 = aa.groupby('DCA Description')['crashes'].sum().sort_values().index[-10:]
-    aa = aa[aa['DCA Description'].isin(top10)]
-    fig = px.line(aa, x="ACCIDENTYEAR", y="crashes", color='DCA Description',
-        title='Leading Type of Severe Accidents',
-        category_orders={'DCA Description':order_dca})
-    fig.update_yaxes(title='Severe Accidents')
     return fig
 
 if __name__ == '__main__':
