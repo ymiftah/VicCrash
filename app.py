@@ -18,17 +18,9 @@ app.layout = html.Div(children=[
 
     html.H2(children='Accidents by year'),
 
-    dcc.Markdown(
-        '''
-        While the overall number of accidents each year has kept level since 2006, we do notice a striking decrease in severe and fatal accidents since 2016.
-        It would be interesting to track measures taken then and see if they could explain this decrease.
-
-        We see a drastic decrease of accidents in 2020, but this was an 'outlier year' as the State of Victoria was on lock-down since March 2020, probably leading to a decrease of vehicle traffic.
-
-        '''),
-
     html.Div([
         html.Div([
+            html.Label('Category selection'),
             dcc.Dropdown(
                 ['Light Condition Desc', 'Road Geometry Desc', 'SEVERITY',
                 'SPEED_ZONE', 'Surface Cond Desc'],
@@ -40,6 +32,24 @@ app.layout = html.Div(children=[
 
     dcc.Graph(
         id='yearlytrends',
+    ),
+
+    html.H2(children='Hourly ditribution of accidents'),
+
+    html.Div([
+        html.Div([
+            html.Label('Category selection'),
+            dcc.Dropdown(
+                ['Accident Type Desc', 'Road Geometry Desc', 'SEVERITY',
+                'SPEED_ZONE', 'Surface Cond Desc'],
+                'SEVERITY',
+                id='hour-colors'
+            ),
+        ], style={'width': '45%', 'display': 'inline-block'}),
+    ]),
+
+    dcc.Graph(
+        id='hourly_accidents',
     ),
 
     html.H2(children='Map of fatal accidents'),
@@ -58,12 +68,6 @@ app.layout = html.Div(children=[
     ),
 
     html.H2(children='Dangerous Roads'),
-
-    dcc.Markdown(
-        '''
-        Severe and Fatal accidents are more likely to happen on certain roads, particulary on Princes Highway, Nepean Highway.
-        We also notice that 'High Street' is recurring in Severe crashes, it however does not correspond to a single street, but to busy roads accross different towns in the State of Victoria. 
-        '''),
 
     html.Div([
 
@@ -102,16 +106,47 @@ app.layout = html.Div(children=[
         id='year-slider-2',
         value=[df['ACCIDENTYEAR'].min(), df['ACCIDENTYEAR'].max()],
         marks={str(year): str(year) for year in df['ACCIDENTYEAR'].unique()},
+    ),
+
+    html.H2(children='Leading type of severe accidents'),
+
+    dcc.Graph(
+        id='accident-type',
+    ),
+
+    html.Label('Year'),
+    dcc.RangeSlider(
+        df['ACCIDENTYEAR'].min(),
+        df['ACCIDENTYEAR'].max(),
+        step=None,
+        id='year-slider-3',
+        value=[df['ACCIDENTYEAR'].min(), df['ACCIDENTYEAR'].max()],
+        marks={str(year): str(year) for year in df['ACCIDENTYEAR'].unique()},
     )
 ])
 
 @app.callback(
     Output('yearlytrends', 'figure'),
     Input('colors', 'value'))
-def update_graph(colors):
+def update_graph_year(colors):
     fig = px.histogram(df.sort_values(colors), x="ACCIDENTYEAR", y="crashes",
              color=colors, barmode='stack')
     fig.update_xaxes(title='Year')
+    fig.update_yaxes(title='Number of crashes')
+    fig.update_layout(margin={'l': 40, 'b': 40, 't': 10, 'r': 0}, hovermode='closest')
+    return fig
+
+order = df[['Accident Type Desc', 'crashes']].groupby('Accident Type Desc').sum().sort_values('crashes', ascending=False).index
+    
+@app.callback(
+    Output('hourly_accidents', 'figure'),
+    Input('hour-colors', 'value'))
+def update_graph_hour(colors):
+    fig = px.histogram(df.sort_values(colors),
+            x="ACCIDENTHOUR", y="crashes",
+            color=colors, barmode='stack',
+            category_orders={'SEVERITY':list(range(5)), 'Accident Type Desc': order})
+    fig.update_xaxes(title='Hour')
     fig.update_yaxes(title='Number of crashes')
     fig.update_layout(margin={'l': 40, 'b': 40, 't': 10, 'r': 0}, hovermode='closest')
     return fig
@@ -146,5 +181,19 @@ def update_roads(color, slider, value):
     fig.update_yaxes(title='Fatal accidents')
     return fig
 
+@app.callback(
+    Output('accident-type', 'figure'),
+    Input('year-slider-3', 'value'))
+def update_accident_type(years):
+    severe = df[df.SEVERITY <= 2]
+    severe = severe[(severe.ACCIDENTYEAR >= years[0]) & (severe.ACCIDENTYEAR <= years[1])]
+    aa = severe[['ACCIDENTYEAR', 'DCA Description', 'crashes']].groupby(['ACCIDENTYEAR', 'DCA Description']).sum().reset_index()
+    top10 = aa.groupby('DCA Description')['crashes'].sum().sort_values().index[-10:]
+    aa = aa[aa['DCA Description'].isin(top10)]
+    fig = px.line(aa, x="ACCIDENTYEAR", y="crashes", color='DCA Description',
+    title='Leading Type of Severe Accidents')
+    fig.update_yaxes(title='Severe Accidents')
+    return fig
+
 if __name__ == '__main__':
-    app.run_server(debug=False)
+    app.run_server(debug=True)

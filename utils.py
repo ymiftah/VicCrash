@@ -24,6 +24,17 @@ df = df.merge(foo[['ACCIDENT_NO', 'SURFACE_COND', 'Surface Cond Desc']], left_on
 foo = pd.read_csv(files.open('ACCIDENT_LOCATION.csv'))
 df = df.merge(foo[['ACCIDENT_NO', 'ROAD_NAME', 'ROAD_TYPE', 'ROAD_NAME_INT', 'ROAD_TYPE_INT']], left_on='ACCIDENT_NO',right_on='ACCIDENT_NO', how='left')
 
+foo = pd.read_csv(files.open('VEHICLE.csv'))
+foo = foo[['ACCIDENT_NO', 'VEHICLE_YEAR_MANUF']]
+foo.drop(foo[foo['VEHICLE_YEAR_MANUF'] < 1900].index, inplace=True)
+foo = foo.groupby('ACCIDENT_NO').min().reset_index()
+df = df.merge(foo[['ACCIDENT_NO', 'VEHICLE_YEAR_MANUF']], left_on='ACCIDENT_NO',right_on='ACCIDENT_NO', how='left')
+
+foo = pd.read_csv(files.open('SUBDCA.csv'))
+foo = foo[['ACCIDENT_NO', 'Sub Dca Code Desc']]
+foo = foo.groupby('ACCIDENT_NO').agg(','.join).reset_index()
+df = df.merge(foo[['ACCIDENT_NO', 'Sub Dca Code Desc']], left_on='ACCIDENT_NO',right_on='ACCIDENT_NO', how='left')
+
 
 select = ['ACCIDENT_NO', 'ACCIDENTDATE', 'ACCIDENTTIME',
        'Accident Type Desc', 'Day Week Description',
