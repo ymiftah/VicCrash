@@ -113,16 +113,6 @@ app.layout = html.Div(children=[
     dcc.Graph(
         id='accident-type',
     ),
-
-    html.Label('Year'),
-    dcc.RangeSlider(
-        df['ACCIDENTYEAR'].min(),
-        df['ACCIDENTYEAR'].max(),
-        step=None,
-        id='year-slider-3',
-        value=[df['ACCIDENTYEAR'].min(), df['ACCIDENTYEAR'].max()],
-        marks={str(year): str(year) for year in df['ACCIDENTYEAR'].unique()},
-    )
 ])
 
 @app.callback(
@@ -179,11 +169,9 @@ def update_roads(color, slider, value):
     return fig
 
 @app.callback(
-    Output('accident-type', 'figure'),
-    Input('year-slider-3', 'value'))
-def update_accident_type(years):
-    severe = df[(df.SEVERITY <= 2) & \
-            (df.ACCIDENTYEAR >= years[0]) & (df.ACCIDENTYEAR <= years[1])]
+    Output('accident-type', 'figure'))
+def update_accident_type(_):
+    severe = df[(df.SEVERITY <= 2)]
     aa = severe[['ACCIDENTYEAR', 'DCA Description', 'crashes']].groupby(['ACCIDENTYEAR', 'DCA Description']).sum().reset_index()
     top10 = aa.groupby('DCA Description')['crashes'].sum().sort_values().index[-10:]
     aa = aa[aa['DCA Description'].isin(top10)]
