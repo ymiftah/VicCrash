@@ -7,15 +7,15 @@ zip_file_url= 'https://vicroadsopendatastorehouse.vicroads.vic.gov.au/opendata/R
 r = requests.get(zip_file_url)
 files = ZipFile(io.BytesIO(r.content))
 
-df = pd.read_csv(files.open("ACCIDENT.csv"))
+
+select=['ACCIDENT_NO', 'ACCIDENTDATE', 'ACCIDENTTIME', 'Accident Type Desc', 'Day Week Description', 'NO_PERSONS_KILLED',
+       'DCA Description', 'Light Condition Desc', 'Road Geometry Desc', 'SEVERITY',
+       'SPEED_ZONE']
+df = pd.read_csv(files.open("ACCIDENT.csv"), usecols=select)
 df['ACCIDENTDATE'] = pd.to_datetime(df['ACCIDENTDATE'], infer_datetime_format=True)
 df['ACCIDENTTIME'] = pd.to_datetime(df['ACCIDENTTIME'], infer_datetime_format=True)
 df['ACCIDENTYEAR'] = df['ACCIDENTDATE'].dt.year
 df['ACCIDENTHOUR'] = df['ACCIDENTTIME'].dt.hour
-
-df = df[['ACCIDENT_NO', 'Accident Type Desc', 'Day Week Description', 
-       'DCA Description', 'Light Condition Desc', 'Road Geometry Desc', 'SEVERITY',
-       'SPEED_ZONE', 'ACCIDENTYEAR', 'ACCIDENTHOUR']]
 
 foo = pd.read_csv(files.open('NODE.csv'), usecols = ['ACCIDENT_NO', 'LGA_NAME', 'Lat', 'Long']).drop_duplicates(subset=['ACCIDENT_NO'])
 df = df.merge(foo,
