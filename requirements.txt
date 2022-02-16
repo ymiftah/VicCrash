@@ -4,3 +4,4 @@ dash
 gunicorn
 scipy
 numpy
+requests

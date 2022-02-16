@@ -7,8 +7,9 @@ zip_file_url= 'https://vicroadsopendatastorehouse.vicroads.vic.gov.au/opendata/R
 r = requests.get(zip_file_url)
 files = ZipFile(io.BytesIO(r.content))
 
-df = pd.read_csv(files.open("ACCIDENT.csv"),
-        parse_dates=['ACCIDENTDATE', 'ACCIDENTTIME'])
+df = pd.read_csv(files.open("ACCIDENT.csv"))
+df['ACCIDENTDATE'] = pd.to_datetime(df['ACCIDENTDATE'])
+df['ACCIDENTTIME'] = pd.to_datetime(df['ACCIDENTTIME'])
 df['ACCIDENTYEAR'] = df['ACCIDENTDATE'].dt.year
 df['ACCIDENTHOUR'] = df['ACCIDENTTIME'].dt.hour
 
