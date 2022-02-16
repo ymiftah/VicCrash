@@ -13,6 +13,10 @@ df['ACCIDENTTIME'] = pd.to_datetime(df['ACCIDENTTIME'], infer_datetime_format=Tr
 df['ACCIDENTYEAR'] = df['ACCIDENTDATE'].dt.year
 df['ACCIDENTHOUR'] = df['ACCIDENTTIME'].dt.hour
 
+df = df[['ACCIDENT_NO', 'Accident Type Desc', 'Day Week Description', 
+       'DCA Description', 'Light Condition Desc', 'Road Geometry Desc', 'SEVERITY',
+       'SPEED_ZONE', 'ACCIDENTYEAR', 'ACCIDENTHOUR']]
+
 foo = pd.read_csv(files.open('NODE.csv')).drop_duplicates(subset=['ACCIDENT_NO'])
 df = df.merge(foo[['ACCIDENT_NO', 'LGA_NAME', 'Lat', 'Long']],
     left_on='ACCIDENT_NO',right_on='ACCIDENT_NO', how='inner')
