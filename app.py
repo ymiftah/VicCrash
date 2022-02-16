@@ -7,10 +7,11 @@ import pandas as pd
 
 from utils import df, top_roads
 
-app = Dash(__name__)
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-# assume you have a "long-form" data frame
-# see https://plotly.com/python/px-arguments/ for more options
+app = Dash(__name__, external_stylesheets=external_stylesheets)
+
+server = app.server
 
 app.layout = html.Div(children=[
     html.H1(children='Victoria Car Crashes'),
