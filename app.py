@@ -34,7 +34,7 @@ app.layout = html.Div(children=[
         id='yearlytrends',
     ),
 
-    html.H2(children='Hourly ditribution of accidents'),
+    html.H2(children='Hourly distribution of accidents'),
 
     html.Div([
         html.Div([
@@ -108,7 +108,7 @@ app.layout = html.Div(children=[
         marks={str(year): str(year) for year in df['ACCIDENTYEAR'].unique()},
     ),
 
-    html.H2(children='Leading type of severe accidents'),
+    html.H2(children='Leading types of severe accidents'),
 
     dcc.Graph(
         id='accident-type',
