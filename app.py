@@ -137,7 +137,8 @@ def update_graph_year(colors):
     return fig
 
 order = df[['Accident Type Desc', 'crashes']].groupby('Accident Type Desc').sum().sort_values('crashes', ascending=False).index
-    
+order_dca = df[['DCA Description', 'crashes']].groupby('DCA Description').sum().sort_values('crashes', ascending=False).index
+        
 @app.callback(
     Output('hourly_accidents', 'figure'),
     Input('hour-colors', 'value'))
@@ -145,7 +146,7 @@ def update_graph_hour(colors):
     fig = px.histogram(df.sort_values(colors),
             x="ACCIDENTHOUR", y="crashes",
             color=colors, barmode='stack',
-            category_orders={'SEVERITY':list(range(5)), 'Accident Type Desc': order})
+            category_orders={'SEVERITY':list(range(5)), 'Accident Type Desc': order, 'DCA Description':order_dca})
     fig.update_xaxes(title='Hour')
     fig.update_yaxes(title='Number of crashes')
     fig.update_layout(margin={'l': 40, 'b': 40, 't': 10, 'r': 0}, hovermode='closest')
@@ -177,7 +178,7 @@ def update_roads(color, slider, value):
     frame=frame[(frame.ROAD_NAME.isin(top_roads))].sort_values(color)
     fig = px.histogram(frame, x="ROAD_NAME", y="crashes",
              color=color, barmode='stack',
-             category_orders={'ROAD_NAME':top_roads})
+             category_orders={'ROAD_NAME':top_roads , 'DCA Description':order_dca})
     fig.update_yaxes(title='Fatal accidents')
     return fig
 
@@ -191,9 +192,10 @@ def update_accident_type(years):
     top10 = aa.groupby('DCA Description')['crashes'].sum().sort_values().index[-10:]
     aa = aa[aa['DCA Description'].isin(top10)]
     fig = px.line(aa, x="ACCIDENTYEAR", y="crashes", color='DCA Description',
-    title='Leading Type of Severe Accidents')
+        title='Leading Type of Severe Accidents',
+        category_orders={'DCA Description':order_dca})
     fig.update_yaxes(title='Severe Accidents')
     return fig
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=False)
