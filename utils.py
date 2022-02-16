@@ -13,9 +13,8 @@ df['ACCIDENTTIME'] = pd.to_datetime(df['ACCIDENTTIME'])
 df['ACCIDENTYEAR'] = df['ACCIDENTDATE'].dt.year
 df['ACCIDENTHOUR'] = df['ACCIDENTTIME'].dt.hour
 
-df_node = pd.read_csv(files.open('NODE.csv')).drop_duplicates(subset=['ACCIDENT_NO'])
-
-df = df.merge(df_node[['ACCIDENT_NO', 'LGA_NAME', 'Lat', 'Long']],
+foo = pd.read_csv(files.open('NODE.csv')).drop_duplicates(subset=['ACCIDENT_NO'])
+df = df.merge(foo[['ACCIDENT_NO', 'LGA_NAME', 'Lat', 'Long']],
     left_on='ACCIDENT_NO',right_on='ACCIDENT_NO', how='inner')
 
 foo = pd.read_csv(files.open('ROAD_SURFACE_COND.csv')).drop_duplicates(subset=['ACCIDENT_NO'])
@@ -35,6 +34,7 @@ foo = foo[['ACCIDENT_NO', 'Sub Dca Code Desc']]
 foo = foo.groupby('ACCIDENT_NO').agg(','.join).reset_index()
 df = df.merge(foo[['ACCIDENT_NO', 'Sub Dca Code Desc']], left_on='ACCIDENT_NO',right_on='ACCIDENT_NO', how='left')
 
+del(foo)
 
 select = ['ACCIDENT_NO', 'ACCIDENTDATE', 'ACCIDENTTIME',
        'Accident Type Desc', 'Day Week Description',
