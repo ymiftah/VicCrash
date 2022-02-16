@@ -183,7 +183,7 @@ def update_roads(color, slider, value):
     Input('year-slider-3', 'value'))
 def update_accident_type(years):
     severe = df[(df.SEVERITY <= 2) & \
-            (severe.ACCIDENTYEAR >= years[0]) & (severe.ACCIDENTYEAR <= years[1])]
+            (df.ACCIDENTYEAR >= years[0]) & (df.ACCIDENTYEAR <= years[1])]
     aa = severe[['ACCIDENTYEAR', 'DCA Description', 'crashes']].groupby(['ACCIDENTYEAR', 'DCA Description']).sum().reset_index()
     top10 = aa.groupby('DCA Description')['crashes'].sum().sort_values().index[-10:]
     aa = aa[aa['DCA Description'].isin(top10)]

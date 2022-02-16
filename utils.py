@@ -8,8 +8,8 @@ r = requests.get(zip_file_url)
 files = ZipFile(io.BytesIO(r.content))
 
 df = pd.read_csv(files.open("ACCIDENT.csv"))
-df['ACCIDENTDATE'] = pd.to_datetime(df['ACCIDENTDATE'])
-df['ACCIDENTTIME'] = pd.to_datetime(df['ACCIDENTTIME'])
+df['ACCIDENTDATE'] = pd.to_datetime(df['ACCIDENTDATE'], infer_datetime_format=True)
+df['ACCIDENTTIME'] = pd.to_datetime(df['ACCIDENTTIME'], infer_datetime_format=True)
 df['ACCIDENTYEAR'] = df['ACCIDENTDATE'].dt.year
 df['ACCIDENTHOUR'] = df['ACCIDENTTIME'].dt.hour
 
