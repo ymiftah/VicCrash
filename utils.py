@@ -47,14 +47,3 @@ top_roads = df.groupby('ROAD_NAME').size().sort_values(ascending=False).head(30)
 
 order = df[['Accident Type Desc', 'crashes']].groupby('Accident Type Desc').sum().sort_values('crashes', ascending=False).index
 order_dca = df[['DCA Description', 'crashes']].groupby('DCA Description').sum().sort_values('crashes', ascending=False).index
-      
-
-def fig_accident_type():
-    severe = df[df.SEVERITY <= 2]
-    aa = severe[['ACCIDENTYEAR', 'DCA Description', 'crashes']].groupby(['ACCIDENTYEAR', 'DCA Description']).sum().reset_index()
-    top10 = aa.groupby('DCA Description')['crashes'].sum().sort_values().index[-10:]
-    aa = aa[aa['DCA Description'].isin(top10)]
-    fig = px.line(aa, x="ACCIDENTYEAR", y="crashes", color='DCA Description',
-        category_orders={'DCA Description':order_dca})
-    fig.update_yaxes(title='Severe Accidents')
-    return fig

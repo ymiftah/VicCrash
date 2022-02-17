@@ -28,10 +28,41 @@ app.layout = html.Div(children=[
                 id='colors'
             ),
         ], style={'width': '45%', 'display': 'inline-block'}),
-    ]),
+
+        html.Div([
+            html.Label('Severity'),
+            dcc.Slider(
+                1,
+                4,
+                step=1,
+                id='yearly-slider',
+                value=4,
+                marks={str(i): str(i) for i in range(1,5)},
+            ),
+        ], style={'width': '30%', 'float': 'right', 'display': 'inline-block', 'padding': 10, 'flex': 1})
+    ], style={'display': 'flex', 'flex-direction': 'row'}
+    ),
 
     dcc.Graph(
         id='yearlytrends',
+    ),
+
+    html.H2(children='Leading types of severe accidents'),
+
+    html.Div([
+        html.Label('Severity'),
+        dcc.Slider(
+            1, 2,
+            step=1,
+            id='types-slider',
+            value=2,
+            marks={str(i): str(i) for i in range(1,3)},
+        ),
+        ], style={'width': '30%'}
+    ),
+
+    dcc.Graph(
+        id='accident-type'
     ),
 
     html.H2(children='Hourly distribution of accidents'),
@@ -50,6 +81,15 @@ app.layout = html.Div(children=[
 
     dcc.Graph(
         id='hourly_accidents',
+    ),
+
+    dcc.RangeSlider(
+        df['ACCIDENTYEAR'].min(),
+        df['ACCIDENTYEAR'].max(),
+        step=None,
+        id='hourly-year-slider',
+        value=[df['ACCIDENTYEAR'].min(), df['ACCIDENTYEAR'].max()],
+        marks={str(year): str(year) for year in df['ACCIDENTYEAR'].unique()},
     ),
 
     html.H2(children='Map of fatal accidents'),
@@ -106,33 +146,42 @@ app.layout = html.Div(children=[
         id='year-slider-2',
         value=[df['ACCIDENTYEAR'].min(), df['ACCIDENTYEAR'].max()],
         marks={str(year): str(year) for year in df['ACCIDENTYEAR'].unique()},
-    ),
-
-    html.H2(children='Leading types of severe accidents'),
-
-    dcc.Graph(
-        id='accident-type',
-        figure=fig_accident_type()
     )
 ])
 
 @app.callback(
     Output('yearlytrends', 'figure'),
-    Input('colors', 'value'))
-def update_graph_year(colors):
-    fig = px.histogram(df.sort_values(colors),
+    Input('colors', 'value'),
+    Input('yearly-slider', 'value'))
+def update_graph_year(colors, slider):
+    fig = px.histogram(df[df.SEVERITY <= slider].sort_values(colors),
             x="ACCIDENTYEAR", y="crashes",
             color=colors, barmode='stack')
     fig.update_xaxes(title='Year')
     fig.update_yaxes(title='Number of crashes')
     fig.update_layout(margin={'l': 40, 'b': 40, 't': 10, 'r': 0}, hovermode='closest')
     return fig
-  
+
+@app.callback(
+    Output('accident-type', 'figure'),
+    Input('types-slider', 'value'))
+def update_accident_types(slider):
+    severe = df[df.SEVERITY <= slider]
+    aa = severe[['ACCIDENTYEAR', 'DCA Description', 'crashes']].groupby(['ACCIDENTYEAR', 'DCA Description']).sum().reset_index()
+    top10 = aa.groupby('DCA Description')['crashes'].sum().sort_values(ascending=False).index[:10]
+    aa = aa[aa['DCA Description'].isin(top10)]
+    fig = px.line(aa, x="ACCIDENTYEAR", y="crashes", color='DCA Description',
+        category_orders={'DCA Description':top10})
+    fig.update_yaxes(title='Severe Accidents')
+    return fig
+
 @app.callback(
     Output('hourly_accidents', 'figure'),
+    Input('hourly-year-slider', 'value'),
     Input('hour-colors', 'value'))
-def update_graph_hour(colors):
-    fig = px.histogram(df.sort_values(colors),
+def update_graph_hour(value, colors):
+    filter = (df.ACCIDENTYEAR <= value[1]) & (df.ACCIDENTYEAR >= value[0])
+    fig = px.histogram(df[filter].sort_values(colors),
             x="ACCIDENTHOUR", y="crashes",
             color=colors, barmode='stack',
             category_orders={'SEVERITY':list(range(5)), 'Accident Type Desc': order, 'DCA Description':order_dca})
@@ -159,6 +208,10 @@ def update_map(value):
     Input('year-slider-2', 'value'))
 def update_roads(color, slider, value):
     frame = df[(df.SEVERITY<=slider) & (df.ACCIDENTYEAR <= value[1]) & (df.ACCIDENTYEAR >= value[0])]
+    top_roads = frame.groupby('ROAD_NAME').size().sort_values(ascending=False).head(30).index
+    order_dca = frame[['DCA Description', 'crashes']].groupby('DCA Description').sum().sort_values('crashes', ascending=False).index
+
+
     frame = frame[(frame.ROAD_NAME.isin(top_roads))].sort_values(color)
     fig = px.histogram(frame, x="ROAD_NAME", y="crashes",
              color=color, barmode='stack',
